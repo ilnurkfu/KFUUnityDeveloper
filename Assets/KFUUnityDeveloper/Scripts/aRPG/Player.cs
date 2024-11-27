@@ -1,31 +1,20 @@
 using UnityEngine;
-using UnityEngineInternal;
 
 namespace aRPG
 {
-    public class Player : MonoBehaviour
+    public class Player : Character
     {
-        [SerializeField] private PlayerMovement playerMovement;
+        [SerializeField] private PlayerInput playerInput;
 
-        private void Awake()
+        protected override void Awake()
         {
-            playerMovement = GetComponent<PlayerMovement>();
+            base.Awake();
+            playerInput = GetComponent<PlayerInput>();
         }
 
-        private void Update()
+        private void Start()
         {
-            if (Input.GetMouseButton(0))
-            {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-                if(Physics.Raycast(ray, out RaycastHit hit))
-                {
-                    if (hit.transform.GetComponent<IClickableObject>() != null)
-                    {
-                        playerMovement.MoveTowardsTarget(hit.point);
-                    }
-                }
-            }
+            Initialized();
         }
     }
 }
