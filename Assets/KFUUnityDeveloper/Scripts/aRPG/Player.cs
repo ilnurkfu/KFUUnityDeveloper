@@ -11,11 +11,6 @@ namespace aRPG
             base.Awake();
             playerInput = GetComponent<PlayerInput>();
         }
-
-        private void Start()
-        {
-            Initialized();
-        }
     }
 }
 

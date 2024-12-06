@@ -1,8 +1,12 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class CharacterStats : MonoBehaviour
 {
+    [SerializeField] private bool canHealthRegeneration;
+    [SerializeField] private bool canManaRegeneration;
+
     [SerializeField] private int currentHealth;
     [SerializeField] private int currentMana;
 
@@ -24,7 +28,9 @@ public class CharacterStats : MonoBehaviour
     [SerializeField] private float manaRecoveryTimer;
     [SerializeField] private float manaRecoveryCooldown;
 
-    public int CurremtHealth
+    public event Action OnHealthChange;
+
+    public int CurrentHealth
     {
         get
         {
@@ -40,35 +46,57 @@ public class CharacterStats : MonoBehaviour
         }
     }
 
-    public void HealthRegeneration()
+    public int MaxHealth
     {
-        if(healthRecoveryTimer > 0)
+        get
         {
-            healthRecoveryTimer -= Time.deltaTime;
+            return maxHealth;
         }
-        else
+    }
+
+    public void TimerForHealthRegeneration()
+    {
+        if (canHealthRegeneration)
         {
-            healthRecoveryTimer = healthRecoveryCooldown;
-            if (currentHealth < maxHealth)
+            if (healthRecoveryTimer > 0)
             {
-                currentHealth = (int)MathF.Min(currentHealth + healthRecovery, maxHealth);
+                healthRecoveryTimer -= Time.deltaTime;
+            }
+            else
+            {
+                healthRecoveryTimer = healthRecoveryCooldown;
+                HealthRegeneration(healthRecovery);
             }
         }
     }
 
+    public void HealthRegeneration(int addedHealthPoints)
+    {
+        currentHealth = (int)MathF.Min(currentHealth + addedHealthPoints, maxHealth);
+        OnHealthChange?.Invoke();
+        CheckHealthRegeneration();
+    }
+
     public void ManaRegeneration()
     {
-        if(manaRecoveryTimer > 0)
+        if (canManaRegeneration)
         {
-            manaRecoveryTimer -= Time.deltaTime;
+            if (manaRecoveryTimer > 0)
+            {
+                manaRecoveryTimer -= Time.deltaTime;
+            }
+            else
+            {
+                manaRecoveryTimer = manaRecoveryCooldown;
+                if (currentMana < maxMana)
+                {
+                    currentMana = (int)MathF.Min(currentMana + manaRecovery, maxMana);
+                }
+            }
         }
         else
         {
-            manaRecoveryTimer = manaRecoveryCooldown;
-            if (currentMana < maxMana)
-            {
-                currentMana = (int)MathF.Min(currentMana + manaRecovery, maxMana);
-            }
+           manaRecoveryTimer = manaRecoveryCooldown;
         }
     }
 
@@ -105,9 +133,8 @@ public class CharacterStats : MonoBehaviour
     public void SetHealth(int newHealth)
     {
         currentHealth = newHealth;
+        CheckHealthRegeneration();
     }
-
-
 
     public void StatsInitialized(CharacterCharacteristics characterCharacteristics)
     {
@@ -117,5 +144,29 @@ public class CharacterStats : MonoBehaviour
         CalculatedManaRecovery(characterCharacteristics.Intelligence);
         FullHealthRecovery();
         FullManaRecovery();
+    }
+
+    public void ApplyDamage(int damage)
+    {
+        currentHealth -= damage;
+        if(currentHealth < 0)
+        {
+            currentHealth = 0;
+        }
+        OnHealthChange?.Invoke();
+        CheckHealthRegeneration();
+    }
+
+    private void CheckHealthRegeneration()
+    {
+        if (currentHealth == maxHealth)
+        {
+            canHealthRegeneration = false;
+            healthRecoveryTimer = healthRecoveryCooldown;
+        }
+        else
+        {
+            canHealthRegeneration = true;
+        }
     }
 }

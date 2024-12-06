@@ -1,4 +1,7 @@
+using aRPG;
+using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 public abstract class Character : MonoBehaviour
 {
@@ -8,11 +11,15 @@ public abstract class Character : MonoBehaviour
 
     [SerializeField] protected LevelBase levelBase;
 
+    [SerializeField] protected CharacterInfo characterInfo;
+
     [SerializeField] protected Weapon weapon;
+
+    [SerializeField] Character[] characters;
 
     private void Update()
     {
-        characterStats.HealthRegeneration();
+        characterStats.TimerForHealthRegeneration();
         characterStats.ManaRegeneration();
     }
 
@@ -21,21 +28,32 @@ public abstract class Character : MonoBehaviour
         characterStats = GetComponent<CharacterStats>();
         characterCharacteristics = GetComponent<CharacterCharacteristics>();
         levelBase = GetComponent<LevelBase>();
+        characterInfo = GetComponent<CharacterInfo>();
+    }
+
+    private void Start()
+    {
+        Initialized();
+        characterStats.OnHealthChange += ChangeHealth;
+        characterInfo.ShowHealth(characterStats.CurrentHealth, characterStats.MaxHealth);
+    }
+
+    private UnityAction ApplyDamage()
+    {
+        throw new NotImplementedException();
     }
 
     protected virtual void Initialized()
     {
+        Debug.Log(name);
         characterStats.StatsInitialized(characterCharacteristics);
     }
 
     public void ApplyDamage(int damage)
     {
-        int health = characterStats.CurremtHealth;
-        health -= damage;
-        if(health <= 0)
+        characterStats.ApplyDamage(damage);
+        if (characterStats.CurrentHealth == 0)
         {
-            health = 0;
-            characterStats.SetHealth(health);
             Died();
         }
     }
@@ -43,5 +61,10 @@ public abstract class Character : MonoBehaviour
     protected void Died()
     {
         Debug.Log("Потрачено");
+    }
+
+    public void ChangeHealth()
+    {
+        characterInfo.ShowHealth(characterStats.CurrentHealth, characterStats.MaxHealth);
     }
 }

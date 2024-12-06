@@ -30,6 +30,7 @@ namespace aRPG
                     if (hit.transform.GetComponent<IClickableObject>() != null)
                     {
                         //playerMovement.MoveTowardsTarget(hit.point);
+                        hit.transform.GetComponent<IClickableObject>().Click();
                         agent.SetDestination(hit.point);
                     }
                 }
